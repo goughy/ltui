@@ -43,6 +43,9 @@ function choicebox:init(name, bounds)
 
     -- init start index
     self._STARTINDEX = 1
+
+    self:option_set("selected_mark", "(X) ")
+    self:option_set("deselected_mark", "( ) ")
 end
 
 -- load values
@@ -97,6 +100,7 @@ function choicebox:scroll(count)
             return
         elseif startindex < 1 then
             startindex = 1
+            count = 1
         end
         self._STARTINDEX = startindex
         self:clear()
@@ -144,6 +148,7 @@ end
 -- on event
 function choicebox:on_event(e)
     if e.type == event.ev_keyboard then
+        --log:printf("EVENT:choicebox:%s: key %s\n", self:name(), e.key_name) 
         if e.key_name == "Down" then
             if self:current() == self:last() then
                 self:scroll(self:height())
@@ -151,19 +156,23 @@ function choicebox:on_event(e)
                 self:select_next()
             end
             self:_notify_scrolled()
+            self:_autoselect()
             return true
         elseif e.key_name == "Up" then
             if self:current() == self:first() then
+                log:printf("EVENT:choicebox:first == current, scrolling %d\n",-self:height())
                 self:scroll(-self:height())
             else
                 self:select_prev()
             end
             self:_notify_scrolled()
+            self:_autoselect()
             return true
         elseif e.key_name == "PageDown" or e.key_name == "PageUp" then
             local direction = e.key_name == "PageDown" and 1 or -1
             self:scroll(self:height() * direction)
             self:_notify_scrolled()
+            self:_autoselect()
             return true
         elseif e.key_name == "Enter" or e.key_name == " " then
             self:_do_select()
@@ -179,7 +188,11 @@ end
 function choicebox:_load_item(value, index, selected)
 
     -- init text
-    local text = (selected and "(X) " or "( ) ") .. tostring(value)
+    log:printf("EVENT:CB:value is %s\n", tostring(value))
+    local text = (selected and self:option("selected_mark") or self:option("deselected_mark")) .. tostring(value)
+    if self:option("fullwidth") and string.len(text) < self:width() then
+        text = text .. string.rep(" ", self:width() - string.len(text))
+    end
 
     -- init a value item view
     local item = button:new("choicebox.value." .. index,
@@ -202,6 +215,12 @@ function choicebox:_notify_scrolled()
     self:action_on(action.ac_on_scrolled, startindex / totalcount)
 end
 
+function choicebox:_autoselect()
+  if self:option("autoselect") then
+    self:_do_select()
+  end
+end
+
 -- get all items
 function choicebox:_items()
     return self._ITEMS
@@ -211,24 +230,31 @@ end
 function choicebox:_do_select()
 
     -- clear selected text
-    for v in self:views() do
-        local text = v:text()
-        if text and text:startswith("(X) ") then
-            local t = v:extra("value")
-            v:text_set("( ) " .. tostring(t))
-        end
-    end
+	if not self:option("multiselect") then
+		for v in self:views() do
+			local text = v:text()
+			if text and text:startswith(self:option("selected_mark")) then
+				local t = v:extra("value")
+				v:text_set(self:option("deselected_mark") .. tostring(t))
+			end
+		end
+	end
 
     -- get the current item
-    local item = self:current()
+  local item = self:current()
+	local is_selected = item:text() and item:text():startswith(self:option("selected_mark")) or false
 
-    -- do action: on selected
-    local index = item:extra("index")
-    local value = item:extra("value")
-    self:action_on(action.ac_on_selected, index, value)
+  -- do action: on selected
+  local index = item:extra("index")
+  local value = item:extra("value")
+  self:action_on(action.ac_on_selected, index, value)
 
-    -- update text
-    item:text_set("(X) " .. tostring(value))
+  value = (is_selected and self:option("deselected_mark") or self:option("selected_mark")) .. tostring(value)
+  if self:option("fullwidth") and string.len(value) < self:width() then
+      value = value .. string.rep(" ", self:width() - string.len(value))
+  end
+  -- update text
+	item:text_set(value)
 end
 
 -- return module
