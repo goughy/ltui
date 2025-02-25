@@ -24,6 +24,7 @@ local view        = require("ltui/view")
 local event       = require("ltui/event")
 local action      = require("ltui/action")
 local curses      = require("ltui/curses")
+local theme       = require("ltui/theme")
 local luajit, bit = pcall(require, "bit")
 if not luajit then
     bit = require("ltui/base/bit")
@@ -78,7 +79,7 @@ function label:text_set(text)
     if changed then
         self:action_on(action.ac_on_text_changed)
     end
-    self:invalidate()
+    self:invalidate(changed)
     return self
 end
 
@@ -124,6 +125,9 @@ function label:splitext(text, width)
 
     -- get width
     width = width or self:width()
+    if width <= 0 then
+        return ""
+    end
 
     -- split text first
     local result = {}

@@ -123,6 +123,7 @@ end
 
 -- center view
 function panel:center(v, opt)
+    --log:printf("\ncenter() - %s: aligning %s", self:name(), v:name())
 
     -- center this view if centerx or centery are set
     local bounds = v:bounds()
@@ -142,6 +143,45 @@ function panel:center(v, opt)
     end
 end
 
+-- align view based on 'align' option
+function panel:align(v)
+    local bounds = v:bounds()
+    local update = false
+    local org = point {bounds.sx, bounds.sy}
+
+    local align = v:option("align")
+
+    if align and align:find("center") then
+        org.x = math.floor((self:width() - v:width()) / 2)
+        update = true
+    elseif align and align:find("left") then
+        org.x = self:bounds().sx + 1
+        update = true
+    elseif align and align:find("right") then
+        org.x = self:bounds().ex - v:width() - 1
+        --log:printf("align(right): %s: %s: self.ex = %d, v:width = %d, org.x = %d\n",
+        --        self:name(), v:name(), self:bounds().ex, v:width(), org.x)
+        update = true
+    end
+
+    if align and align:find("middle") then
+        org.y = math.floor((self:height() - v:height()) / 2)
+        update = true
+    elseif align and align:find("top") then
+        org.y = self:bounds().sy
+        update = true
+    elseif align and align:find("bottom") then
+        org.y = self:bounds().ey - 1
+        update = true
+    end
+
+    if update then
+        bounds:move(org.x - bounds.sx, org.y - bounds.sy)
+        v:invalidate(true)
+    end
+
+end
+
 -- insert view
 function panel:insert(v, opt)
 
@@ -155,7 +195,7 @@ function panel:insert(v, opt)
     end
 
     -- center this view if centerx or centery are set
-    self:center(v, opt)
+    --self:center(v, opt)
 
     -- insert this view
     self._VIEWS:push(v)

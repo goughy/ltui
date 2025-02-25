@@ -51,6 +51,7 @@ ltui.textdialog   = require("ltui/textdialog")
 ltui.textedit     = require("ltui/textedit")
 ltui.view         = require("ltui/view")
 ltui.window       = require("ltui/window")
+ltui.theme        = require("ltui/theme")
 
 -- return module
 return ltui

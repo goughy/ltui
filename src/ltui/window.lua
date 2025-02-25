@@ -53,19 +53,32 @@ function window:init(name, bounds, title, shadow)
     self:frame():insert(self:border())
 
     -- insert title
-    if title then
-        self._TITLE = label:new("window.title", rect{0, 0, #title, 1}, title)
-        self:title():textattr_set("blue bold")
-        self:title():action_set(action.ac_on_text_changed, function (v)
-            if v:text() then
-                local bounds = v:bounds()
-                v:bounds():resize(#v:text(), v:height())
-                bounds:move2(math.max(0, math.floor((self:frame():width() - v:width()) / 2)), bounds.sy)
-                v:invalidate(true)
-            end
-        end)
-        self:frame():insert(self:title(), {centerx = true})
-    end
+    title = title or ""
+    self._TITLE = label:new("window.title", rect{1, 0, #title + 1, 1}, title)
+    self:title():textattr_set("blue bold onwhite")
+    self:title():option_set("align", "top center")
+    self:title():action_set(action.ac_on_text_changed, function (v)
+        if v:text() then
+            v:bounds():resize(#v:text(), v:height())
+            v:invalidate(true)
+        end
+    end)
+    self:frame():insert(self:title())
+
+    self._FOOTER = label:new("window.footer", rect{1, self:height() - 1, 1, self:height()}, "")
+    self:footer():textattr_set("blue bold onwhite")
+    self:footer():option_set("align", "bottom left")
+    self:footer():action_set(action.ac_on_text_changed, function (v)
+        if v:text() then
+            v:bounds():resize(#v:text(), v:height())
+            v:invalidate(true)
+            --local r = v:bounds():intersect(rect{0, 0, self:width(), self:height()})
+            --if r:empty() then
+            --    log:printf("!!footer does not intersect window!! footer %s, window %s\n", v, self)
+            --end
+        end
+    end)
+    self:frame():insert(self:footer())
 
     -- insert panel
     self:frame():insert(self:panel())
@@ -95,6 +108,10 @@ end
 -- get title
 function window:title()
     return self._TITLE
+end
+
+function window:footer()
+    return self._FOOTER
 end
 
 -- get shadow
@@ -130,10 +147,14 @@ function window:on_resize()
     end
     self:border():bounds_set(self:frame():bounds())
     if self:title() then
-        self:frame():center(self:title(), {centerx = true})
+        self:frame():align(self:title()) -- uses 'align' option of title
+    end
+    if self:footer() then
+        self:frame():align(self:footer()) -- uses 'align' option of footer
     end
     self:panel():bounds_set(self:frame():bounds())
     self:panel():bounds():grow(-1, -1)
+
     panel.on_resize(self)
 end
 

@@ -20,10 +20,10 @@ add_cxflags("-Wno-error=deprecated-declarations", "-fno-strict-aliasing", "-Wno-
 add_defines("_GNU_SOURCE=1", "_FILE_OFFSET_BITS=64", "_LARGEFILE_SOURCE")
 
 -- set the symbols visibility: hidden
-set_symbols("hidden")
+--set_symbols("hidden")
 
 -- strip all symbols
-set_strip("all")
+--set_strip("all")
 
 -- fomit the frame pointer
 add_cxflags("-fomit-frame-pointer")
@@ -48,7 +48,7 @@ option_end()
 if has_config("luajit") then
     add_requires("luajit")
 else
-    add_requires("lua")
+    add_requires("lua5.3")
 end
 if not is_plat("windows") then
     add_requires("ncurses", {configs = {cflags = "-fPIC"}})
@@ -70,7 +70,7 @@ target("test")
     if has_config("luajit") then
         add_packages("luajit")
     else
-        add_packages("lua")
+        add_packages("lua5.3")
     end
 
     -- run tests
@@ -81,7 +81,7 @@ target("test")
         import("lib.detect.find_tool")
 
         -- do run
-        local lua = has_config("luajit") and find_tool("luajit") or find_tool("lua")
+        local lua = has_config("luajit") and find_tool("luajit") or find_tool("lua5.3")
         if lua then
             os.cd(os.projectdir())
             local testname = table.wrap(option.get("arguments"))[1] or "mconfdialog"
@@ -112,7 +112,7 @@ target("ltui")
         add_defines("LUAJIT")
         add_packages("luajit", {links = lualinks})
     else
-        add_packages("lua", {links = lualinks})
+        add_packages("lua5.3", {links = lualinks})
     end
 
     -- add curses
@@ -122,14 +122,14 @@ target("ltui")
     else
         add_packages("ncurses")
     end
-
+--[[
     -- dynamic lookup liblua symbols
     if is_plat("macosx") then
         add_shflags("-undefined dynamic_lookup")
     elseif is_plat("linux", "bsd") then
         add_shflags("-undefined suppress")
     end
-
+--]]
 -- add projects
 includes("src/core/curses")
 if is_plat("windows") then

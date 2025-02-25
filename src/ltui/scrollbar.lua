@@ -24,6 +24,7 @@ local view      = require("ltui/view")
 local event     = require("ltui/event")
 local curses    = require("ltui/curses")
 local action    = require("ltui/action")
+local theme    = require("ltui/theme")
 
 -- define module
 local scrollbar = scrollbar or view()
@@ -44,7 +45,8 @@ function scrollbar:init(name, bounds, vertical)
     self:progress_set(0)
 
     -- init character
-    self:char_set(' ')
+    self:char_set(theme.current.scrollbar and theme.current.scrollbar.char or ' ')
+    self:charattr_set(theme.current.scrollbar and theme.current.scrollbar.charattr or "white onblue")
 end
 
 -- get bar attribute

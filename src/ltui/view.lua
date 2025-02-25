@@ -27,6 +27,7 @@ local object = require("ltui/object")
 local canvas = require("ltui/canvas")
 local curses = require("ltui/curses")
 local action = require("ltui/action")
+local theme  = require("ltui/theme")
 
 -- define module
 local view = view or object()
@@ -88,6 +89,7 @@ function view:init(name, bounds)
 
     -- init bounds and window
     self:bounds_set(bounds)
+    self:background_set(theme.current.bg)
 end
 
 -- exit view

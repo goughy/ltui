@@ -24,6 +24,7 @@ local rect   = require("ltui/rect")
 local view   = require("ltui/view")
 local panel  = require("ltui/panel")
 local curses = require("ltui/curses")
+local theme = require("ltui/theme")
 
 -- define module
 local desktop = desktop or panel()
@@ -35,7 +36,7 @@ function desktop:init(name, bounds)
     panel.init(self, name, bounds)
 
     -- init background
-    self:background_set("blue")
+    self:background_set(theme.current.bg)
 end
 
 -- return module

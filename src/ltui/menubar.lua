@@ -24,6 +24,7 @@ local rect      = require("ltui/rect")
 local label     = require("ltui/label")
 local panel     = require("ltui/panel")
 local curses    = require("ltui/curses")
+local theme    = require("ltui/theme")
 
 -- define module
 local menubar = menubar or panel()
@@ -37,10 +38,11 @@ function menubar:init(name, bounds)
     -- init title
     self._TITLE = label:new("menubar.title", rect{0, 0, self:width(), self:height()}, "Menu Bar")
     self:insert(self:title())
-    self:title():textattr_set("red")
+    self:title():textattr_set(theme.current and theme.current.bg or "red")
 
     -- init background
-    self:background_set("white")
+    self:background_set(theme.current and theme.current.fg or "white") --use the inverse
+    self:title():background_set(theme.current and theme.current.fg or "white") --use the inverse
 end
 
 -- get title

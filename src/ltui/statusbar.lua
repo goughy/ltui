@@ -25,6 +25,7 @@ local panel     = require("ltui/panel")
 local label     = require("ltui/label")
 local event     = require("ltui/event")
 local curses    = require("ltui/curses")
+local theme    = require("ltui/theme")
 
 -- define module
 local statusbar = statusbar or panel()
@@ -39,10 +40,11 @@ function statusbar:init(name, bounds)
     self._INFO = label:new("statusbar.info", rect{0, 0, self:width(), self:height()})
     self:insert(self:info())
     self:info():text_set("Status Bar")
-    self:info():textattr_set("blue")
+    self:info():textattr_set(theme.current and theme.current.bg or "blue")
+    self:info():background_set(theme.current and theme.current.fg or "white")
 
     -- init background
-    self:background_set("white")
+    self:background_set(theme.current and theme.current.fg or "white")
 end
 
 -- get status info

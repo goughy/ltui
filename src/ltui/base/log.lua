@@ -96,6 +96,7 @@ function log:print(...)
     local file = self:file()
     if file then
         file:write(string.format(...) .. "\n")
+        self:flush()
     end
 end
 
@@ -116,6 +117,7 @@ function log:printv(...)
             end
         end
         file:write('\n')
+        self:flush()
     end
 end
 
@@ -124,6 +126,7 @@ function log:printf(...)
     local file = self:file()
     if file then
         file:write(string.format(...))
+        self:flush()
     end
 end
 
@@ -132,6 +135,7 @@ function log:write(...)
     local file = self:file()
     if file then
         file:write(...)
+        self:flush()
     end
 end
 

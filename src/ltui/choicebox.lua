@@ -28,6 +28,7 @@ local action    = require("ltui/action")
 local curses    = require("ltui/curses")
 local button    = require("ltui/button")
 local object    = require("ltui/object")
+local theme     = require("ltui/theme")
 
 -- define module
 local choicebox = choicebox or panel()
@@ -44,8 +45,8 @@ function choicebox:init(name, bounds)
     -- init start index
     self._STARTINDEX = 1
 
-    self:option_set("selected_mark", "(X) ")
-    self:option_set("deselected_mark", "( ) ")
+    self:option_set("selected_mark", theme.current.choicebox and theme.current.choicebox.selected_mark or "(X) ")
+    self:option_set("deselected_mark", theme.current.choicebox and theme.current.choicebox.deselected_mark or "( ) ")
 end
 
 -- load values
@@ -77,6 +78,7 @@ function choicebox:load(values, selected)
 
     -- select the first item
     self:select(self:first())
+    self:_autoselect()
 
     -- on loaded
     self:action_on(action.ac_on_load)
@@ -91,8 +93,8 @@ function choicebox:scrollable()
 end
 
 -- scroll
-function choicebox:scroll(count)
-    if self:scrollable() then
+function choicebox:scroll(count, force)
+    if self:scrollable() or force then
         local items = self:_items()
         local totalcount = #items
         local startindex = self._STARTINDEX + count
@@ -118,6 +120,7 @@ function choicebox:scroll(count)
         else
             self:select(self:last())
         end
+        self:_autoselect()
         self:invalidate()
     end
 end
@@ -148,7 +151,6 @@ end
 -- on event
 function choicebox:on_event(e)
     if e.type == event.ev_keyboard then
-        --log:printf("EVENT:choicebox:%s: key %s\n", self:name(), e.key_name) 
         if e.key_name == "Down" then
             if self:current() == self:last() then
                 self:scroll(self:height())
@@ -160,7 +162,6 @@ function choicebox:on_event(e)
             return true
         elseif e.key_name == "Up" then
             if self:current() == self:first() then
-                log:printf("EVENT:choicebox:first == current, scrolling %d\n",-self:height())
                 self:scroll(-self:height())
             else
                 self:select_prev()
@@ -181,6 +182,9 @@ function choicebox:on_event(e)
     elseif e.type == event.ev_command and e.command == "cm_enter" then
         self:_do_select()
         return true
+    elseif e.type == event.ev_command and e.command == "cb_scroll" then
+        self:scroll(e.extra)
+        return true
     end
 end
 
@@ -188,7 +192,7 @@ end
 function choicebox:_load_item(value, index, selected)
 
     -- init text
-    log:printf("EVENT:CB:value is %s\n", tostring(value))
+    --log:printf("EVENT:CB:value is %s\n", tostring(value))
     local text = (selected and self:option("selected_mark") or self:option("deselected_mark")) .. tostring(value)
     if self:option("fullwidth") and string.len(text) < self:width() then
         text = text .. string.rep(" ", self:width() - string.len(text))
@@ -202,6 +206,8 @@ function choicebox:_load_item(value, index, selected)
                         self:_do_select()
                     end)
 
+    item:textattr_set(theme.current.fg)
+
     -- attach index and value
     item:extra_set("index", index)
     item:extra_set("value", value)
@@ -211,7 +217,7 @@ end
 -- notify scrolled
 function choicebox:_notify_scrolled()
     local totalcount = #self:_items()
-    local startindex = self:current():extra("index")
+    local startindex = self:current() and self:current():extra("index") or 0
     self:action_on(action.ac_on_scrolled, startindex / totalcount)
 end
 
@@ -242,7 +248,10 @@ function choicebox:_do_select()
 
     -- get the current item
   local item = self:current()
-	local is_selected = item:text() and item:text():startswith(self:option("selected_mark")) or false
+  if not item then
+      return
+  end
+  local is_selected = item:text() and item:text():startswith(self:option("selected_mark")) or false
 
   -- do action: on selected
   local index = item:extra("index")
@@ -254,7 +263,7 @@ function choicebox:_do_select()
       value = value .. string.rep(" ", self:width() - string.len(value))
   end
   -- update text
-	item:text_set(value)
+  item:text_set(value)
 end
 
 -- return module
